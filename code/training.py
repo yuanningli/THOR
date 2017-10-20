@@ -27,7 +27,7 @@ with open("thor-challenge-targets/targets-train.json") as f:
         step_count = 0
         while (not env.target_found()) and step_count < max_steps:
             # Possible actions are: MoveLeft, MoveRight, MoveAhead, MoveBack, LookUp, LookDown, RotateRight, RotateLeft
-            # to be plugin agent action here
+            # to plugin agent action here
             event = env.step(action=dict(action='MoveLeft', moveMagnitude=0.25))
 
             # image of the current frame from the agent - numpy array of shape (300,300,3) in RGB order
