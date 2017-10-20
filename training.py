@@ -18,6 +18,8 @@ with open("thor-challenge-targets/targets-train.json") as f:
     for target in t:
         # initialize
         env.initialize_target(target)
+        # path to the target image (e.g. apple, lettuce, keychain, etc.)
+        print(target['targetImage'])
         event = env.step(action=dict(action='Look', horizon=0.0))
         print(event.metadata['lastActionSuccess'])
         frame = event.frame
@@ -27,11 +29,11 @@ with open("thor-challenge-targets/targets-train.json") as f:
             # Possible actions are: MoveLeft, MoveRight, MoveAhead, MoveBack, LookUp, LookDown, RotateRight, RotateLeft
             # to be plugin agent action here
             event = env.step(action=dict(action='MoveLeft', moveMagnitude=0.25))
-            # path to the target image (e.g. apple, lettuce, keychain, etc.)
 
             # image of the current frame from the agent - numpy array of shape (300,300,3) in RGB order
             image = event.frame
             image_feature = recog_net.feat_extract(image)
+            
             # LookUp/Down beyond the allowed range.
             print(event.metadata['lastActionSuccess'])
 
