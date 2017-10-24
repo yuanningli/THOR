@@ -33,7 +33,7 @@ for i in range(num_samples):
     event = env.step(action=dict(action='MoveAhead', moveMagnitude=0.0))
     frame = event.frame
     image_feat = recog_net.feat_extract(frame)
-    image_feature[i, :] = image_feat.data.numpy()
+    image_feature[i, :] = image_feat.data.squeeze().unsqueeze_(0).numpy()
 
 # low dimensional embedding
 svd = TruncatedSVD(n_components=50, n_iter=7)
