@@ -25,7 +25,7 @@ with open("thor-challenge-targets/targets-train.json") as f:
 
 # initialize network
 recog_net = recog_stream.RecogNet(architecture)
-image_feature = np.zeros(num_samples, num_features)
+image_feature = np.zeros((num_samples, num_features))
 
 # extract features
 for i in range(num_samples):
