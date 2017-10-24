@@ -30,10 +30,16 @@ image_feature = np.zeros(num_samples, num_features)
 # extract features
 for i in range(num_samples):
     target = t[i]
-    event = env.step(action=dict(action='MoveAhead', moveMagnitude=0.0))
+    env.initialize_target(target)
+    event = env.step(action=dict(action='MoveAhead', moveMagnitude=0.00))
     frame = event.frame
     image_feat = recog_net.feat_extract(frame)
     image_feature[i, :] = image_feat.data.squeeze().unsqueeze_(0).numpy()
+
+# low dimensional embedding
+svd = TruncatedSVD(n_components=50, n_iter=7)
+image_feature_SVD = svd.fit_transform(image_feature)
+image_embedded = TSNE(n_components=2).fit_transform(image_feature_SVD)
 
 # low dimensional embedding
 svd = TruncatedSVD(n_components=50, n_iter=7)
