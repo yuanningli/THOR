@@ -6,11 +6,16 @@ from PIL import Image
 
 
 class RecogNet(object):
-    def __init__(self):
+    def __init__(self, model_name='VGG'):
         # import pretrained model and remove the soft-max layer
-        self.model = models.vgg19(pretrained=True)
-        new_classifier = nn.Sequential(*list(self.model.classifier.children())[:-1])
-        self.model.classifier = new_classifier
+        if model_name == 'ResNet':
+            self.model = models.resnet50(pretrained=True)
+            new_classifier = nn.Sequential(*list(self.model.children())[:-1])
+            self.model = new_classifier
+        else:
+            self.model = models.vgg19(pretrained=True)
+            new_classifier = nn.Sequential(*list(self.model.classifier.children())[:-1])
+            self.model.classifier = new_classifier
 
     def feat_extract(self, frame):
         # normalize the input image
@@ -19,8 +24,8 @@ class RecogNet(object):
            std=[0.229, 0.224, 0.225]
         )
         preprocess = transforms.Compose([
-           transforms.Scale(256),
-           transforms.CenterCrop(224),
+           transforms.Scale(224),
+           # transforms.CenterCrop(224),
            transforms.ToTensor(),
            normalize
         ])
