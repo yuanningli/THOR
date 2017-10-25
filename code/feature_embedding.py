@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-architecture = 'VGG'
+architecture = 'ResNet'
 num_samples = 400
 if architecture == 'ResNet':
     num_features = 2048
@@ -69,12 +69,12 @@ for i in range(100):
 event = env.step(action=dict(action='RotateRight', rotation=90.0))
 
 # low dimensional embedding
-svd = TruncatedSVD(n_components=50, n_iter=15)
+svd = TruncatedSVD(n_components=50, n_iter=10)
 image_feature_SVD = svd.fit_transform(image_feature)
 image_embedded = TSNE(n_components=2).fit_transform(image_feature_SVD)
 
 # plot embeddings
-ff1 = plt.figure(figsize=(8, 8))
+ff1 = plt.figure(figsize=(8, 6))
 counter = 0
 for i in range(100):
     plt.scatter(image_embedded[counter,0], image_embedded[counter,1],c=cm.Purples_r(i / 100.0))
@@ -88,6 +88,7 @@ for i in range(100):
 for i in range(100):
     plt.scatter(image_embedded[counter,0], image_embedded[counter,1],c=cm.Oranges_r(i / 100.0))
     counter += 1
-plt.savefig('embedding3_VGG.png')
+plt.tight_layout()
+plt.savefig('embedding3_ResNet3.png')
 plt.close(ff1)
 
