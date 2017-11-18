@@ -1,6 +1,7 @@
 import robosims
 import cv2
 import recog_stream
+import torch
 
 
 architecture = 'ResNet'
@@ -28,23 +29,23 @@ for target in t:
     # convert target image
     target_im = cv2.imread("thor-challenge-targets/" + target['targetImage'])
     target_img = cv2.resize(target_im, (300, 300))
-    target_feat = recog_net.feat_extract(target_img).squeeze()
+    target_feature = recog_net.feat_extract(target_img).squeeze()
 
     event = env.step(action=dict(action='MoveAhead'))
     print(event.metadata['lastActionSuccess'])
-    frame = event.frame
-    image_feature = recog_net.feat_extract(image).squeeze()
 
     step_count = 0
     while (not env.target_found()) and step_count < max_steps:
-        # Possible actions are: MoveLeft, MoveRight, MoveAhead, MoveBack, LookUp, LookDown, RotateRight, RotateLeft
-        # to plugin agent action here
-        event = env.step(action=dict(action='MoveLeft'))
 
         # image of the current frame from the agent - numpy array of shape (300,300,3) in RGB order
         image = event.frame
         image_feature = recog_net.feat_extract(image).squeeze()
+        combine_feature = torch.cat((image_feature, target_feature), 0)
 
-        # LookUp/Down beyond the allowed range.
-        print(event.metadata['lastActionSuccess'])
+        # Possible actions are: MoveLeft, MoveRight, MoveAhead, MoveBack, LookUp, LookDown, RotateRight, RotateLeft
+        # to plugin agent action here
+        event = env.step(action=dict(action='MoveLeft'))
+        if event.metadata['lastActionSuccess']:
+            step_count += 1
+
 
