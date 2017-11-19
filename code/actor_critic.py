@@ -13,6 +13,7 @@ from torch.autograd import Variable
 import robosims
 import cv2
 import recog_stream
+import json
 
 # choose architecture
 architecture = 'ResNet'
@@ -110,7 +111,7 @@ def get_target_feature(target_name, recog_model):
 def get_state_feature(current_event, recog_model, target_feat):
     img = current_event.frame
     img_feat = recog_model.feat_extract(img).squeeze()
-    return torch.cat((img_feat, target_feat), 0)
+    return torch.cat((img_feat, target_feat), 0).data.numpy()
 
 
 action_sets = ['MoveLeft', 'MoveRight', 'MoveAhead', 'MoveBack', 'LookUp', 'LookDown', 'RotateRight', 'RotateLeft']
@@ -125,7 +126,7 @@ with open("thor-challenge-targets/targets-train.json") as f:
         # convert target image
         target_feature = get_target_feature(target, recog_net)
         event = env.step(action=dict(action='MoveAhead'))
-        
+
         for i_episode in count(1):
             env.initialize_target(target)
             state = get_state_feature(event, recog_net, target_feature)
