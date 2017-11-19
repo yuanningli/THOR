@@ -14,7 +14,7 @@ import robosims
 import cv2
 import recog_stream
 
-
+# choose architecture
 architecture = 'ResNet'
 num_samples = 400
 if architecture == 'ResNet':
@@ -28,10 +28,9 @@ env = robosims.controller.ChallengeController(
     x_display="0.0" # this parameter is ignored on OSX, but you must set this to the appropriate display on Linux
 )
 env.start()
-
 recog_net = recog_stream.RecogNet(architecture)
 
-
+# parse input
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -42,11 +41,12 @@ parser.add_argument('--render', action='store_true',
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='interval between training status logs (default: 10)')
 args = parser.parse_args()
-
 torch.manual_seed(args.seed)
 
 
 SavedAction = namedtuple('SavedAction', ['action', 'value'])
+
+
 class Policy(nn.Module):
     def __init__(self):
         super(Policy, self).__init__()
@@ -124,11 +124,8 @@ with open("thor-challenge-targets/targets-train.json") as f:
         env.initialize_target(target)
         # convert target image
         target_feature = get_target_feature(target, recog_net)
-
         event = env.step(action=dict(action='MoveAhead'))
-
-        step_count = 0
-
+        
         for i_episode in count(1):
             env.initialize_target(target)
             state = get_state_feature(event, recog_net, target_feature)
