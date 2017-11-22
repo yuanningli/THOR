@@ -1,7 +1,6 @@
 
 # coding: utf-8
 
-# In[24]:
 
 import argparse
 import numpy as np
@@ -27,7 +26,6 @@ CUDA_LAUNCH_BLOCKING=1
 CUDA_VISIBLE_DEVICES=0,1,2,3
 torch.backends.cudnn.enabled=True
 
-# In[25]:
 
 class RecogNet(object):
     def __init__(self, model_name='VGG'):
@@ -44,8 +42,6 @@ class RecogNet(object):
             self.model.classifier = new_classifier
             if use_gpu:
                 self.model.classifier = self.model.classifier.cuda()
-
-        
 
     def feat_extract(self, frame):
         # normalize the input image
@@ -68,8 +64,6 @@ class RecogNet(object):
         else:
             return self.model(Variable(img_tensor.cuda()))
 
-
-# In[26]:
 
 class Policy(nn.Module):
     def __init__(self):
@@ -101,6 +95,7 @@ def select_action(state, eps):
     model.saved_actions.append(SavedAction(action, state_value))
     return action.data
 
+
 def finish_episode(gamma):
     R = 0
     saved_actions = model.saved_actions
@@ -123,16 +118,17 @@ def finish_episode(gamma):
     del model.rewards[:]
     del model.saved_actions[:]
 
+
 def get_target_feature(target_name, recog_model):
-    target_image = io.imread("./thor-challenge-targets/" + target_name['targetImage'])
+    target_image = io.imread("../../thor-challenge-targets/" + target_name['targetImage'])
     # target_image = cv2.resize(target_image, (300, 300))
     return recog_model.feat_extract(target_image).squeeze()
+
 
 def get_state_feature(current_event, recog_model, target_feat):
     img = current_event.frame
     img_feat = recog_model.feat_extract(img).squeeze()
-    return torch.cat((img_feat, target_feat), 0).data.numpy()
-
+    return torch.cat((img_feat, target_feat), 0).data.cpu().numpy()
 
 
 # choose architecture
@@ -145,7 +141,7 @@ else:
 
 # initialize environment
 env = robosims.controller.ChallengeController(
-    unity_path='./thor-201706291201-Linux64',
+    unity_path='../../thor-201705011400-Linux64',
     x_display="0.0" # this parameter is ignored on OSX, but you must set this to the appropriate display on Linux
 )
 # env.start(start_unity=False)
@@ -173,15 +169,15 @@ torch.manual_seed(seed)
 SavedAction = namedtuple('SavedAction', ['action', 'value'])
 
 model = Policy()
-optimizer = optim.Adam(model.parameters(), lr=7e-4)
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 
 action_sets = ['MoveLeft', 'MoveRight', 'MoveAhead', 'MoveBack', 'LookUp', 'LookDown', 'RotateRight', 'RotateLeft']
-running_episode_len = 3000
+running_episode_len = 10000
 episode_len_threshold = 1000
-max_episode_len = 3000
+max_episode_len = 10000
 epsilon = 1
-with open("thor-challenge-targets/targets-train.json") as f:
+with open("../../thor-challenge-targets/targets-train.json") as f:
     current_targets = json.loads(f.read())
 
     for target in current_targets[:1]:
@@ -196,21 +192,22 @@ with open("thor-challenge-targets/targets-train.json") as f:
             epsilon -= 0.01
             if epsilon < 0.1:
                 epsilon = 0.1
-#             print('============== Episode: {} ==============='.format(i_episode))
+            print('============== Episode: {} ==============='.format(i_episode))
             env.initialize_target(target)
             state = get_state_feature(event, recog_net, target_feature)
             for t in range(max_episode_len):  # Don't infinite loop while learning
-                print('step = {}'.format(t))
                 action = select_action(state, epsilon)
                 event = env.step(action=dict(action=action_sets[int(action[0, 0])]))
+                if t % 50 == 0:
+                    print('step = {}, action = {}'.format(t, action_sets[int(action[0, 0])]))
                 state = get_state_feature(event, recog_net, target_feature)
                 done = env.target_found()
-                if not done:
-                    reward = -0.5
-                elif event.metadata['lastActionSuccess']:
+                if (not done) and event.metadata['lastActionSuccess']:
+                    reward = -0.1
+                if (not done) and (not event.metadata['lastActionSuccess']):
                     reward = -1
-                else:
-                    reward = 1
+                if done:
+                    reward = 10
                 model.rewards.append(reward)
                 if done:
                     break
